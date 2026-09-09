@@ -141,18 +141,3 @@ export class S3Compat implements ObjectStore {
     );
   }
 }
-export function objectStore(): ObjectStore {
-  return process.env.OBJECT_STORAGE === "s3"
-    ? new S3Compat({
-        endpoint: process.env.S3_ENDPOINT!,
-        region: process.env.S3_REGION || "auto",
-        bucket: process.env.S3_BUCKET!,
-        prefix: process.env.S3_PREFIX || "prisx/",
-        forcePathStyle: process.env.S3_PATH_STYLE !== "false",
-        credentials: {
-          accessKeyId: process.env.S3_ACCESS_KEY_ID!,
-          secretAccessKey: process.env.S3_SECRET_ACCESS_KEY!,
-        },
-      })
-    : new FileStorage(resolve(process.env.DATA_DIR || "data", "objects"));
-}

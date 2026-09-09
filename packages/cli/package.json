@@ -1,0 +1,19 @@
+{
+  "name": "@prisx/cli",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "prisx": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "bun build src/index.ts --target=bun --outdir=dist",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit",
+    "format": "bunx prettier --write src tests"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.2.21",
+    "typescript": "^5.9.2"
+  }
+}

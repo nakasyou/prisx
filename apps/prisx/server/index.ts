@@ -4,14 +4,14 @@ import { db, sqlite } from "./db";
 import { workspaces, memberships, records } from "./schema";
 import { and, eq } from "drizzle-orm";
 import { ApiError, authorized, ensureWorkspace } from "./repository";
-import { objectStore } from "./storage";
+import { config } from "./config";
 import { parseQuery } from "../src/domain";
 import { resolve } from "node:path";
 import { importWikidata } from "./wikidata";
 import { importArchive } from "./archive";
-const port = Number(process.env.PORT || 3100);
-const secretPath = (process.env.DATA_DIR || "data") + "/auth-secret";
-if (!process.env.BETTER_AUTH_SECRET) {
+const port = config.port;
+const secretPath = config.relationalAdaptor.dataDir + "/auth-secret";
+if (!config.authSecret) {
   if (!(await Bun.file(secretPath).exists()))
     await Bun.write(secretPath, crypto.randomUUID() + crypto.randomUUID(), {
       mode: 0o600,
@@ -20,16 +20,13 @@ if (!process.env.BETTER_AUTH_SECRET) {
 }
 const auth = betterAuth({
   database: drizzleAdapter(db, { provider: "sqlite" }),
-  baseURL: process.env.APP_URL || `http://localhost:${port}`,
-  trustedOrigins: [
-    process.env.APP_URL || `http://localhost:${port}`,
-    "http://localhost:5173",
-  ],
-  secret: process.env.BETTER_AUTH_SECRET,
+  baseURL: config.appUrl,
+  trustedOrigins: [config.appUrl, "http://localhost:5173"],
+  secret: config.authSecret || process.env.BETTER_AUTH_SECRET,
   emailAndPassword: { enabled: true },
   advanced: { database: { generateId: () => crypto.randomUUID() } },
 });
-const store = objectStore();
+const store = config.objectAdaptor;
 const json = (v: unknown, status = 200) => Response.json(v, { status });
 const sha = (b: Uint8Array) =>
   new Bun.CryptoHasher("sha256").update(b).digest("hex");
@@ -87,10 +84,7 @@ async function handle(req: Request): Promise<Response> {
   if (
     req.method !== "GET" &&
     req.headers.get("origin") &&
-    ![
-      process.env.APP_URL || `http://localhost:${port}`,
-      "http://localhost:5173",
-    ].includes(req.headers.get("origin")!)
+    ![config.appUrl, "http://localhost:5173"].includes(req.headers.get("origin")!)
   )
     throw new ApiError(403, "Origin が不正");
   const session = await auth.api.getSession({ headers: req.headers });
@@ -234,7 +228,7 @@ async function handle(req: Request): Promise<Response> {
         .records("upload", entityId)
         .find((u) => u.key === key);
       if (duplicate) return json(repo.record(duplicate.contentId, "content"));
-      const max = Number(process.env.MAX_UPLOAD_BYTES || 104857600);
+      const max = Number(config.maxUploadBytes);
       if (Number(req.headers.get("content-length")) > max)
         throw new ApiError(413, "容量上限");
       const reader = req.body?.getReader();
@@ -398,7 +392,7 @@ async function handle(req: Request): Promise<Response> {
 }
 const server = Bun.serve({
   port,
-  hostname: process.env.HOST || "127.0.0.1",
+  hostname: config.host,
   maxRequestBodySize: 110 * 1024 * 1024,
   fetch: async (req) => {
     try {

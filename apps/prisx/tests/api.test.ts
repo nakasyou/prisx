@@ -1,5 +1,5 @@
 import { test, expect, beforeAll, afterAll } from "bun:test";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 let proc: ReturnType<typeof Bun.spawn>,
@@ -11,6 +11,22 @@ let proc: ReturnType<typeof Bun.spawn>,
   tag = "",
   statement: any;
 const base = "http://localhost:3191";
+async function configPath(dir: string, port: number, url: string) {
+  const adapter = join(import.meta.dir, "..", "server", "adapters.ts");
+  const file = join(dir, "prisx.config.ts");
+  await writeFile(
+    file,
+    `import { defineConfig, sqlite, file } from ${JSON.stringify(adapter)};
+export default defineConfig({
+  host: "127.0.0.1",
+  port: ${port},
+  appUrl: ${JSON.stringify(url)},
+  relationalAdaptor: sqlite({ path: ${JSON.stringify(join(dir, "prisx.sqlite"))} }),
+  objectAdaptor: file({ dir: ${JSON.stringify(join(dir, "objects"))} }),
+});`,
+  );
+  return file;
+}
 async function call(
   path: string,
   method = "GET",
@@ -35,8 +51,10 @@ async function call(
 const route = (s: string) => `/api/w/${workspace}${s}`;
 beforeAll(async () => {
   dir = await mkdtemp(join(tmpdir(), "prisx-api-"));
+  const cfg = await configPath(dir, 3191, base);
   proc = Bun.spawn(["bun", "server/index.ts"], {
-    env: { ...process.env, PORT: "3191", APP_URL: base, DATA_DIR: dir },
+    cwd: join(import.meta.dir, ".."),
+    env: { ...process.env, PRISX_CONFIG: cfg },
     stdout: "ignore",
     stderr: "pipe",
   });
@@ -283,8 +301,10 @@ test("アーカイブを別の空 DB に ID とバイト列を保って再イン
   const archive = await (await call(route("/export"))).json();
   const destDir = await mkdtemp(join(tmpdir(), "prisx-import-"));
   const destBase = "http://localhost:3192";
+  const destCfg = await configPath(destDir, 3192, destBase);
   const dest = Bun.spawn(["bun", "server/index.ts"], {
-    env: { ...process.env, PORT: "3192", APP_URL: destBase, DATA_DIR: destDir },
+    cwd: join(import.meta.dir, ".."),
+    env: { ...process.env, PRISX_CONFIG: destCfg },
     stdout: "ignore",
     stderr: "pipe",
   });

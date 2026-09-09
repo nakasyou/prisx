@@ -4,6 +4,9 @@
   "workspaces": {
     "": {
       "name": "prisx",
+    },
+    "apps/prisx": {
+      "name": "prisx",
       "dependencies": {
         "@aws-sdk/client-s3": "^3.0.0",
         "@codemirror/autocomplete": "^6.18.7",
@@ -32,6 +35,17 @@
       "devDependencies": {
         "@types/bun": "^1.2.21",
         "prettier": "^3.9.6",
+        "typescript": "^5.9.2",
+      },
+    },
+    "packages/cli": {
+      "name": "@prisx/cli",
+      "version": "0.1.0",
+      "bin": {
+        "prisx": "./src/index.ts",
+      },
+      "devDependencies": {
+        "@types/bun": "^1.2.21",
         "typescript": "^5.9.2",
       },
     },
@@ -260,6 +274,8 @@
     "@noble/hashes": ["@noble/hashes@2.4.0", "", {}, "sha512-X5XaVWZIBCT7HHZGm5I7ZQXDwLG+bGXuSrMQAW+7Zvl87h1kmc1ZB1VSRJcpUfoUrGQp4Fkoxm5kZ+Ms+aW+eA=="],
 
     "@opentelemetry/semantic-conventions": ["@opentelemetry/semantic-conventions@1.43.0", "", {}, "sha512-eSYWTm620tTk45EKSedaUL8MFYI8hW164hIXsgIHyxu3VobUB3fFCu5t0hQby6OoWRPsG1KkKUG2M5UadiLiVg=="],
+
+    "@prisx/cli": ["@prisx/cli@workspace:packages/cli"],
 
     "@rollup/rollup-android-arm-eabi": ["@rollup/rollup-android-arm-eabi@4.63.1", "", { "os": "android", "cpu": "arm" }, "sha512-UZ8sUxPTiHWYX9QNdJedb1kDZSpS1t/VPWBWGSgqHNi9w3Cu6IXvu2mzbhiTiPvtrqgTQJ+zqiAq2iPIPilpaQ=="],
 
@@ -518,6 +534,8 @@
     "postcss": ["postcss@8.5.28", "", { "dependencies": { "nanoid": "^3.3.18", "picocolors": "^1.1.1", "source-map-js": "^1.2.1" } }, "sha512-RRuzqDtt5Y9h3quz5hWhK+TPnsmVs6WwSU6LkJMeY4HstUEDuYTG8UJSdawMRzmzAtV+KEoG8N3Qg2qLy5vM/A=="],
 
     "prettier": ["prettier@3.9.6", "", { "bin": { "prettier": "bin/prettier.cjs" } }, "sha512-OpN0zzVdiaiAhxpuuj5efpIS4sY9j7bY6uR5mnj5yPzGkdkjNKSJeUThPb60Jw29QuAZgA4o+/iB49kFiaBX6g=="],
+
+    "prisx": ["prisx@workspace:apps/prisx"],
 
     "require-from-string": ["require-from-string@2.0.2", "", {}, "sha512-Xf0nWe6RseziFMu+Ap9biiUbmplq6S9/p+7w7YXP/JBHhrUDDUhwa+vANyubuqfZWTveU//DYVGsDG7RKL/vEw=="],
 
